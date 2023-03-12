@@ -5,6 +5,8 @@ const app = express()
 
 app.use(express.json())
 
+const PORT = process.env.PORT || 3001
+
 morgan.token('body', (request, response) => {
   const body = request.body
   if (!body.name) {
@@ -96,7 +98,6 @@ app.post('/api/persons', (request, response) => {
   response.json(person)
 })
 
-const PORT = 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
