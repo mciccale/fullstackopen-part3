@@ -1,0 +1,15 @@
+{
+  "prettier": {
+    "tabWidth": 2,
+    "tabs": false,
+    "semi": false,
+    "singleQuote": true,
+    "jsxSingleQuote": true,
+    "bracketSpacing": true,
+    "bracketSameLine": false,
+    "arrowParens": "avoid"
+  },
+  "dependencies": {
+    "mongoose": "^7.0.1"
+  }
+}
