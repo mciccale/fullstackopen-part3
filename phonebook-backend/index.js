@@ -3,9 +3,14 @@ const morgan = require("morgan");
 
 const app = express();
 
+// Creating a Morgan token to log the body in case it's a POST request
 morgan.token("body", (req, _res) =>
   req.method === "POST" ? JSON.stringify(req.body) : " "
 );
+
+const generateRandomId = () => {
+  return Math.floor(Math.random() * 1000);
+};
 
 app.use(express.json());
 app.use(
@@ -49,24 +54,27 @@ app.get("/api/persons", (_req, res) => {
 });
 
 app.post("/api/persons", (req, res) => {
-  const newPerson = req.body;
+  const body = req.body;
   // Handling missing properties
-  if (
-    !newPerson.hasOwnProperty("name") ||
-    !newPerson.hasOwnProperty("number")
-  ) {
+  if (!body.name || !body.number) {
     res
       .status(400)
-      .json({ error: "name and number fields are compoulsory" })
+      .json({ error: "name and number fields are mandatory" })
       .end();
   }
   // Handling unique name
-  if (phonebook.find((person) => person.name === newPerson.name)) {
+  if (phonebook.find((person) => person.name === body.name)) {
     res.status(400).json({ error: "name must be unique" }).end();
   }
-  const id = Math.floor(Math.random() * 1000);
-  phonebook = phonebook.concat({ id, ...newPerson });
-  res.status(201).json(phonebook);
+  // Creating a new person
+  const newPerson = {
+    id: generateRandomId(),
+    ...body,
+  };
+  // Add the new number
+  phonebook = phonebook.concat(newPerson);
+  // Send the created person
+  res.status(201).json(newPerson);
 });
 
 app.get("/api/persons/:id", (req, res) => {
