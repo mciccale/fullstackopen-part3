@@ -7,7 +7,7 @@ const app = express();
 const Person = require("./models/person");
 
 // Creating a Morgan token to log the body in case it's a POST request
-morgan.token("body", (req, _res) =>
+morgan.token("body", (req) =>
   req.method === "POST" ? JSON.stringify(req.body) : " "
 );
 
@@ -54,7 +54,7 @@ app.get("/api/persons/:id", (req, res, next) => {
 
 app.delete("/api/persons/:id", (req, res, next) => {
   Person.findByIdAndDelete(req.params.id)
-    .then((_deletedPerson) => {
+    .then(() => {
       res.status(204).end();
     })
     .catch((err) => next(err));
