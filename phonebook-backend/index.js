@@ -30,26 +30,14 @@ app.get("/api/persons", (_req, res) => {
   });
 });
 
-app.post("/api/persons", (req, res) => {
-  const body = req.body;
-
-  // Handling missing properties
-  if (!body.name || !body.number) {
-    res
-      .status(400)
-      .json({ error: "name and number fields are mandatory" })
-      .end();
-  }
-
-  // Creating a new person
-  new Person({
-    name: body.name,
-    number: body.number,
-  })
+app.post("/api/persons", (req, res, next) => {
+  const { name, number } = req.body;
+  new Person({ name, number })
     .save()
     .then((person) => {
       res.status(201).json(person);
-    });
+    })
+    .catch((err) => next(err));
 });
 
 app.get("/api/persons/:id", (req, res, next) => {
@@ -77,7 +65,11 @@ app.put("/api/persons/:id", (req, res, next) => {
     name: req.body.name,
     number: req.body.number,
   };
-  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+  Person.findByIdAndUpdate(req.params.id, person, {
+    new: true,
+    runValidators: true,
+    context: "query",
+  })
     .then((updatedPerson) => {
       res.json(updatedPerson);
     })
@@ -92,6 +84,8 @@ app.use((err, _req, res, next) => {
   console.error(err.message);
   if (err.name === "CastError") {
     return res.status(400).send({ error: "malformatted id" });
+  } else if (err.name === "ValidationError") {
+    return res.status(400).json({ error: err.message });
   }
   next(err);
 });
