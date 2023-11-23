@@ -64,27 +64,44 @@ describe('viewing a specific note', () => {
 });
 
 describe('addition of a new note', () => {
-  let userId;
+  let jwtToken;
 
   beforeEach(async () => {
+    const user = {
+      username: 'root',
+      password: 'sekret',
+    };
+
     await User.deleteMany({});
 
-    const passwordHash = await bcrypt.hash('sekret', 10);
-    const user = new User({ username: 'root', passwordHash });
+    const passwordHash = await bcrypt.hash(user.password, 10);
+    await new User({ username: user.username, passwordHash }).save();
 
-    const { id } = await user.save();
-    userId = id;
+    const {
+      body: { token },
+    } = await api.post('/api/login').send(user).expect(200);
+
+    jwtToken = `Bearer ${token}`;
+  });
+
+  test('fails without jwt', async () => {
+    const newNote = {
+      content: 'async/await simplifies making async calls',
+      important: true,
+    };
+
+    await api.post('/api/notes').send(newNote).expect(401);
   });
 
   test('succeeds with valid data', async () => {
     const newNote = {
-      userId,
       content: 'async/await simplifies making async calls',
       important: true,
     };
 
     await api
       .post('/api/notes')
+      .set('Authorization', jwtToken)
       .send(newNote)
       .expect(201)
       .expect('Content-Type', /application\/json/);
@@ -98,11 +115,14 @@ describe('addition of a new note', () => {
 
   test('fails with status code 400 if data invalid', async () => {
     const newNote = {
-      userId,
       important: true,
     };
 
-    await api.post('/api/notes').send(newNote).expect(400);
+    await api
+      .post('/api/notes')
+      .set('Authorization', jwtToken)
+      .send(newNote)
+      .expect(400);
 
     const notesAtEnd = await helper.notesInDb();
 
